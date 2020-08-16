@@ -1,0 +1,110 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index eb0885f95e2..0bd3c6af319 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -829,11 +829,13 @@ ENDIF()
+ # Use lld for Clang if available and not explicitly disabled.
+ # Also works for gcc on Debian/Ubuntu. Do 'apt install lld'.
+ # LTO build fails with lld, so turn it off by default.
+-IF(LINUX AND NOT WITH_LTO)
+-  OPTION(USE_LD_LLD "Use llvm lld linker" ON)
+-ELSE()
+-  OPTION(USE_LD_LLD "Use llvm lld linker" OFF)
+-ENDIF()
++
++# IF(LINUX AND NOT WITH_LTO)
++#   OPTION(USE_LD_LLD "Use llvm lld linker" ON)
++# ELSE()
++#   OPTION(USE_LD_LLD "Use llvm lld linker" OFF)
++# ENDIF()
++OPTION(USE_LD_LLD "Use llvm lld linker" ON)
+ 
+ IF(USE_LD_LLD)
+   CMAKE_PUSH_CHECK_STATE(RESET)
+@@ -1130,33 +1132,33 @@ IF(WITH_LTO)
+     # as target property for mysqld later.
+   ELSE()
+     MY_CHECK_CXX_COMPILER_FLAG("-flto" CXX_LTO_RESULT)
+-    IF(NOT CXX_LTO_RESULT)
+-      MESSAGE(FATAL_ERROR "Compiler does not support -flto")
+-    ENDIF()
++    # IF(NOT CXX_LTO_RESULT)
++    #   MESSAGE(FATAL_ERROR "Compiler does not support -flto=thin")
++    # ENDIF()
+     STRING_APPEND(CMAKE_C_FLAGS   " -flto")
+     STRING_APPEND(CMAKE_CXX_FLAGS " -flto")
+ 
+     # Test for parallel linking.
+-    SET(NUM_PROCESSING_UNITS 4)
+-    MY_CHECK_CXX_COMPILER_FLAG(
+-      "-flto=${NUM_PROCESSING_UNITS}" CXX_LTO_PARALLEL_RESULT)
+-    IF(CXX_LTO_PARALLEL_RESULT)
+-      FIND_PROGRAM(NPROC_EXECUTABLE nproc)
+-      IF(NPROC_EXECUTABLE)
+-        EXECUTE_PROCESS(COMMAND ${NPROC_EXECUTABLE}
+-          OUTPUT_VARIABLE NPROC_NUM
+-          RESULT_VARIABLE NPROC_RESULT
+-          OUTPUT_STRIP_TRAILING_WHITESPACE)
+-        IF(NOT NPROC_RESULT)
+-          SET(NUM_PROCESSING_UNITS ${NPROC_NUM})
+-        ENDIF()
+-      ENDIF()
+-      STRING_APPEND(CMAKE_CXX_LINK_FLAGS      " -flto=${NUM_PROCESSING_UNITS}")
+-      STRING_APPEND(CMAKE_SHARED_LINKER_FLAGS " -flto=${NUM_PROCESSING_UNITS}")
+-    ELSE()
+-      STRING_APPEND(CMAKE_CXX_LINK_FLAGS      " -flto")
+-      STRING_APPEND(CMAKE_SHARED_LINKER_FLAGS " -flto")
+-    ENDIF()
++    # SET(NUM_PROCESSING_UNITS 4)
++    # MY_CHECK_CXX_COMPILER_FLAG(
++    #   "-flto=${NUM_PROCESSING_UNITS}" CXX_LTO_PARALLEL_RESULT)
++    # IF(CXX_LTO_PARALLEL_RESULT)
++    #   FIND_PROGRAM(NPROC_EXECUTABLE nproc)
++    #   IF(NPROC_EXECUTABLE)
++    #     EXECUTE_PROCESS(COMMAND ${NPROC_EXECUTABLE}
++    #       OUTPUT_VARIABLE NPROC_NUM
++    #       RESULT_VARIABLE NPROC_RESULT
++    #       OUTPUT_STRIP_TRAILING_WHITESPACE)
++    #     IF(NOT NPROC_RESULT)
++    #       SET(NUM_PROCESSING_UNITS ${NPROC_NUM})
++    #     ENDIF()
++    #   ENDIF()
++    #   STRING_APPEND(CMAKE_CXX_LINK_FLAGS      " -flto=${NUM_PROCESSING_UNITS}")
++    #   STRING_APPEND(CMAKE_SHARED_LINKER_FLAGS " -flto=${NUM_PROCESSING_UNITS}")
++    # ELSE()
++    #   STRING_APPEND(CMAKE_CXX_LINK_FLAGS      " -flto")
++    #   STRING_APPEND(CMAKE_SHARED_LINKER_FLAGS " -flto")
++    # ENDIF()
+   ENDIF()
+ 
+   # On some platforms (Fedora) we *must* use gcc-ar / gcc-ranlib
+diff --git a/cmake/fprofile.cmake b/cmake/fprofile.cmake
+index 40c573e4abc..cce6e20e47e 100644
+--- a/cmake/fprofile.cmake
++++ b/cmake/fprofile.cmake
+@@ -113,10 +113,10 @@ ENDIF()
+ IF(FPROFILE_GENERATE OR FPROFILE_USE)
+   SET(REPRODUCIBLE_BUILD ON CACHE INTERNAL "")
+   # Build fails with lld, so switch it off.
+-  SET(USE_LD_LLD OFF CACHE INTERNAL "")
++  # SET(USE_LD_LLD OFF CACHE INTERNAL "")
+ ENDIF()
+ 
+ IF(FPROFILE_USE)
+   # LTO combined with PGO boosts performance even more.
+-  SET(WITH_LTO_DEFAULT ON CACHE INTERNAL "")
++  # SET(WITH_LTO_DEFAULT ON CACHE INTERNAL "")
+ ENDIF()
+diff --git a/cmake/ssl.cmake b/cmake/ssl.cmake
+index 52feadeaa3e..fa79ad8bcb5 100644
+--- a/cmake/ssl.cmake
++++ b/cmake/ssl.cmake
+@@ -300,6 +300,8 @@ MACRO (MYSQL_CHECK_SSL)
+                         HAVE_SHA512_DIGEST_LENGTH)
+     CMAKE_POP_CHECK_STATE()
+ 
++    SET(HAVE_SHA512_DIGEST_LENGTH TRUE)
++
+     IF(OPENSSL_FOUND AND HAVE_SHA512_DIGEST_LENGTH)
+       SET(SSL_LIBRARIES ${MY_OPENSSL_LIBRARY} ${MY_CRYPTO_LIBRARY})
+       IF(SOLARIS)
